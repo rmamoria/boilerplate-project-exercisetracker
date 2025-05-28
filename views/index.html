@@ -1,46 +1,158 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Exercise Tracker | freeCodeCamp</title>
-    <link rel="shortcut icon" href="https://cdn.freecodecamp.org/universal/favicons/favicon.ico"  type="image/x-icon" />
-    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css" />
+    <link rel="shortcut icon" href="https://cdn.freecodecamp.org/universal/favicons/favicon.ico" type="image/x-icon" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="style.css" rel="stylesheet" type="text/css" />
   </head>
 
   <body>
     <div class="container">
-      <h1>Exercise tracker</h1>
-      <form action="/api/users" method="post">
-        <h2>Create a New User</h2>
-        <p><code>POST /api/users</code></p>
-        <input id="uname" type="text" name="username" placeholder="username" />
-        <input type="submit" value="Submit" />
-      </form>
-      <form action="/api/users/:_id/exercises" id="exercise-form" method="post">
-        <h2>Add exercises</h2>
-        <p><code>POST /api/users/:_id/exercises</code></p>
-        <input id="uid" type="text" name=":_id" placeholder=":_id" />
-        <input id="desc" type="text" name="description" placeholder="description*" />
-        <input id="dur" type="text" name="duration" placeholder="duration* (mins.)" />
-        <input id="date" type="text" name="date" placeholder="date (yyyy-mm-dd)" />
-        <input type="submit" value="Submit" />
-      </form>
-      <p>
-        <strong>GET user's exercise log: </strong>
-        <code>GET /api/users/:_id/logs?[from][&amp;to][&amp;limit]</code>
-      </p>
-      <p><strong>[ ]</strong> = optional</p>
-      <p><strong>from, to</strong> = dates (yyyy-mm-dd); <strong>limit</strong> = number</p>
-    </div>
-    <script>
-      const exerciseForm = document.getElementById("exercise-form");
+      <header>
+        <h1>Exercise Tracker</h1>
+        <p class="subtitle">Track your fitness journey with ease</p>
+      </header>
 
-      exerciseForm.addEventListener("submit", () => {
+      <main>
+        <section class="card">
+          <h2>Create a New User</h2>
+          <p class="endpoint"><code>POST /api/users</code></p>
+          <form id="user-form" action="/api/users" method="post">
+            <div class="form-group">
+              <label for="uname">Username</label>
+              <input id="uname" type="text" name="username" placeholder="Enter your username" required />
+            </div>
+            <button type="submit" class="btn btn-primary">Create User</button>
+          </form>
+        </section>
+
+        <section class="card">
+          <h2>Add Exercise</h2>
+          <p class="endpoint"><code>POST /api/users/:_id/exercises</code></p>
+          <form id="exercise-form" action="/api/users/:_id/exercises" method="post">
+            <div class="form-group">
+              <label for="uid">User ID</label>
+              <input id="uid" type="text" name=":_id" placeholder="Enter user ID" required />
+            </div>
+            <div class="form-group">
+              <label for="desc">Description</label>
+              <input id="desc" type="text" name="description" placeholder="Exercise description" required />
+            </div>
+            <div class="form-group">
+              <label for="dur">Duration (minutes)</label>
+              <input id="dur" type="number" name="duration" placeholder="Duration in minutes" required />
+            </div>
+            <div class="form-group">
+              <label for="date">Date</label>
+              <input id="date" type="date" name="date" />
+            </div>
+            <button type="submit" class="btn btn-primary">Add Exercise</button>
+          </form>
+        </section>
+
+        <section class="card">
+          <h2>View Exercise Log</h2>
+          <p class="endpoint"><code>GET /api/users/:_id/logs</code></p>
+          <form id="log-form" action="/api/users/:_id/logs" method="get">
+            <div class="form-group">
+              <label for="log-uid">User ID</label>
+              <input id="log-uid" type="text" name=":_id" placeholder="Enter user ID" required />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="from">From</label>
+                <input id="from" type="date" name="from" />
+              </div>
+              <div class="form-group">
+                <label for="to">To</label>
+                <input id="to" type="date" name="to" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="limit">Limit</label>
+              <input id="limit" type="number" name="limit" placeholder="Number of records" min="1" />
+            </div>
+            <button type="submit" class="btn btn-secondary">View Log</button>
+          </form>
+        </section>
+      </main>
+
+      <div id="response" class="response-container"></div>
+    </div>
+
+    <script>
+      // Handle exercise form submission
+      const exerciseForm = document.getElementById("exercise-form");
+      exerciseForm.addEventListener("submit", (e) => {
+        e.preventDefault();
         const userId = document.getElementById("uid").value;
         exerciseForm.action = `/api/users/${userId}/exercises`;
-
-        exerciseForm.submit();
+        submitForm(exerciseForm);
       });
+
+      // Handle user form submission
+      const userForm = document.getElementById("user-form");
+      userForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        submitForm(userForm);
+      });
+
+      // Handle log form submission
+      const logForm = document.getElementById("log-form");
+      logForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const userId = document.getElementById("log-uid").value;
+        const from = document.getElementById("from").value;
+        const to = document.getElementById("to").value;
+        const limit = document.getElementById("limit").value;
+        
+        let url = `/api/users/${userId}/logs`;
+        const params = new URLSearchParams();
+        if (from) params.append('from', from);
+        if (to) params.append('to', to);
+        if (limit) params.append('limit', limit);
+        
+        if (params.toString()) {
+          url += `?${params.toString()}`;
+        }
+        
+        fetch(url)
+          .then(response => response.json())
+          .then(data => showResponse(data))
+          .catch(error => showResponse({ error: error.message }));
+      });
+
+      // Generic form submission handler
+      function submitForm(form) {
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        
+        fetch(form.action, {
+          method: form.method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        })
+          .then(response => response.json())
+          .then(data => showResponse(data))
+          .catch(error => showResponse({ error: error.message }));
+      }
+
+      // Display response in a formatted way
+      function showResponse(data) {
+        const responseContainer = document.getElementById("response");
+        responseContainer.innerHTML = `
+          <div class="response-card">
+            <h3>Response</h3>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+          </div>
+        `;
+        responseContainer.scrollIntoView({ behavior: 'smooth' });
+      }
     </script>
   </body>
 </html>

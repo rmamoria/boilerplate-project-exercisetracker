@@ -23,8 +23,8 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(err.status || 500).json({
     error: {
-      message: err.message || 'Internal Server Error'
-    }
+      message: err.message || 'Internal Server Error',
+    },
   });
 });
 
@@ -32,12 +32,12 @@ app.use((err, req, res, next) => {
 app.use((req, res) => {
   res.status(404).json({
     error: {
-      message: 'Not Found'
-    }
+      message: 'Not Found',
+    },
   });
 });
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });

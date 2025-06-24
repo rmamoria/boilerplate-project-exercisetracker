@@ -78,6 +78,9 @@ const getLogs = (req, res, next) => {
       }
     }
 
+    // Always sort by date ascending
+    query += ' ORDER BY date ASC';
+
     // Add limit if provided
     if (limit) {
       const limitNum = parseInt(limit);

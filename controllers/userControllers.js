@@ -1,7 +1,12 @@
 const db = require('../models/db');
 
 const createUser = (req, res, next) => {
-  const { username } = req.body;
+  let { username } = req.body;
+  
+  // Trim username
+  if (typeof username === 'string') {
+    username = username.trim();
+  }
 
   if (!username) {
     return res.status(400).json({ error: 'Username is required' });

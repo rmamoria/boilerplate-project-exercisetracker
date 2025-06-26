@@ -11,8 +11,8 @@ const addExercise = (req, res, next) => {
 
   // Validate duration is a number
   const durationNum = parseInt(duration);
-  if (isNaN(durationNum)) {
-    return res.status(400).json({ error: 'Duration must be a number' });
+  if (isNaN(durationNum) || durationNum <= 0) {
+    return res.status(400).json({ error: 'Duration must be a positive number' });
   }
 
   // Use current date if not provided
@@ -66,38 +66,34 @@ const getLogs = (req, res, next) => {
     const params = [_id];
 
     // Add date filters if provided
-    if (from || to) {
-      query += ' AND date';
-      if (from) {
-        query += ' >= ?';
-        params.push(from);
-      }
-      if (to) {
-        query += ' <= ?';
-        params.push(to);
-      }
+    if (from) {
+      query += ' AND date >= ?';
+      params.push(from);
+    }
+    if (to) {
+      query += ' AND date <= ?';
+      params.push(to);
     }
 
     // Always sort by date ascending
     query += ' ORDER BY date ASC';
 
-    // Add limit if provided
-    if (limit) {
-      const limitNum = parseInt(limit);
-      if (isNaN(limitNum)) {
-        return res.status(400).json({ error: 'Limit must be a number' });
-      }
-      query += ' LIMIT ?';
-      params.push(limitNum);
-    }
-
     db.all(query, params, (err, exercises) => {
       if (err) return next(err);
+      let filteredExercises = exercises;
+      let count = exercises.length;
+      if (limit) {
+        const limitNum = parseInt(limit);
+        if (isNaN(limitNum)) {
+          return res.status(400).json({ error: 'Limit must be a number' });
+        }
+        filteredExercises = exercises.slice(0, limitNum);
+      }
       res.json({
         _id: user.id,
         username: user.username,
-        count: exercises.length,
-        log: exercises
+        count,
+        log: filteredExercises
       });
     });
   });

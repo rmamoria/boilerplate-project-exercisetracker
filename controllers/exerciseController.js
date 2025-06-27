@@ -78,22 +78,31 @@ const getLogs = (req, res, next) => {
     // Always sort by date ascending
     query += ' ORDER BY date ASC';
 
-    db.all(query, params, (err, exercises) => {
+    // For count, get the total number of exercises matching the filters (without limit)
+    const countQuery = query.replace('SELECT *', 'SELECT COUNT(*) as count');
+    db.get(countQuery, params, (err, countResult) => {
       if (err) return next(err);
-      let filteredExercises = exercises;
-      let count = exercises.length;
+      let count = countResult ? countResult.count : 0;
+
+      // Apply limit if provided and valid
+      let exercisesQuery = query;
       if (limit) {
         const limitNum = parseInt(limit);
         if (isNaN(limitNum)) {
           return res.status(400).json({ error: 'Limit must be a number' });
         }
-        filteredExercises = exercises.slice(0, limitNum);
+        exercisesQuery += ' LIMIT ?';
+        params.push(limitNum);
       }
-      res.json({
-        _id: user.id,
-        username: user.username,
-        count,
-        log: filteredExercises
+
+      db.all(exercisesQuery, params, (err, exercises) => {
+        if (err) return next(err);
+        res.json({
+          _id: user.id,
+          username: user.username,
+          count,
+          log: exercises
+        });
       });
     });
   });
